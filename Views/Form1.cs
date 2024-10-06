@@ -42,8 +42,8 @@ namespace ImagePCA.Views
                 return;
             }
 
-            // Використання об'єкта стратегії для обробки зображення
-            processedImage = _imageProcessor.ProcessImage(originalImage);
+            ColorChannel selectedChannel = GetSelectedChannel();
+            processedImage = _imageProcessor.ProcessImage(originalImage, selectedChannel);
             pictureBoxProcessed.SizeMode = PictureBoxSizeMode.StretchImage;
             pictureBoxProcessed.Image = processedImage;
         }
@@ -67,9 +67,21 @@ namespace ImagePCA.Views
             }
         }
 
+        private ColorChannel GetSelectedChannel()
+        {
+            switch (comboBoxChannels.SelectedItem.ToString())
+            {
+                case "R": return ColorChannel.R;
+                case "G": return ColorChannel.G;
+                case "B": return ColorChannel.B;
+                default: return ColorChannel.R;
+            }
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            comboBoxChannels.Items.AddRange(new string[] { "R", "G", "B" });
+            comboBoxChannels.SelectedIndex = 0;
         }
     }
 }

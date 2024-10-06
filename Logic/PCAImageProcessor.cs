@@ -14,15 +14,15 @@ namespace ImagePCA.Logic
         /// </summary>
         /// <param name="originalImage">Оригінальне зображення у форматі <see cref="Bitmap"/>.</param>
         /// <returns>Оброблене зображення у форматі <see cref="Bitmap"/>.</returns>
-        public Bitmap ProcessImage(Bitmap originalImage)
+        public Bitmap ProcessImage(Bitmap originalImage, ColorChannel channel)
         {
-            var pixels = ImageToPixels(originalImage);
+            var pixels = ImageToPixels(originalImage, channel);  // Измененный метод
             var meanVector = CalculateMean(pixels);
             var centeredPixels = CenterData(pixels, meanVector);
             var covarianceMatrix = CalculateCovarianceMatrix(centeredPixels);
             var eigenVectors = FindEigenVectors(covarianceMatrix);
             var transformedPixels = ApplyTransformation(centeredPixels, eigenVectors);
-            return PixelsToImage(transformedPixels, originalImage.Width, originalImage.Height);
+            return PixelsToImage(transformedPixels, originalImage.Width, originalImage.Height, channel);  // Измененный метод
         }
 
         /// <summary>
@@ -30,18 +30,28 @@ namespace ImagePCA.Logic
         /// </summary>
         /// <param name="image">Зображення, яке потрібно перетворити.</param>
         /// <returns>Двовимірний масив пікселів, де кожен піксель представлений RGB-значеннями.</returns>
-        private double[,] ImageToPixels(Bitmap image)
+        private double[,] ImageToPixels(Bitmap image, ColorChannel channel)
         {
-            double[,] pixels = new double[image.Width * image.Height, 3];
+            double[,] pixels = new double[image.Width * image.Height, 1];
             for (int y = 0; y < image.Height; y++)
             {
                 for (int x = 0; x < image.Width; x++)
                 {
                     Color pixel = image.GetPixel(x, y);
                     int index = y * image.Width + x;
-                    pixels[index, 0] = pixel.R;
-                    pixels[index, 1] = pixel.G;
-                    pixels[index, 2] = pixel.B;
+
+                    switch (channel)
+                    {
+                        case ColorChannel.R:
+                            pixels[index, 0] = pixel.R;
+                            break;
+                        case ColorChannel.G:
+                            pixels[index, 0] = pixel.G;
+                            break;
+                        case ColorChannel.B:
+                            pixels[index, 0] = pixel.B;
+                            break;
+                    }
                 }
             }
             return pixels;
@@ -176,7 +186,7 @@ namespace ImagePCA.Logic
         /// <param name="width">Ширина зображення.</param>
         /// <param name="height">Висота зображення.</param>
         /// <returns>Зображення у форматі <see cref="Bitmap"/>.</returns>
-        private Bitmap PixelsToImage(double[,] pixels, int width, int height)
+        private Bitmap PixelsToImage(double[,] pixels, int width, int height, ColorChannel channel)
         {
             Bitmap result = new Bitmap(width, height);
             for (int y = 0; y < height; y++)
@@ -184,10 +194,26 @@ namespace ImagePCA.Logic
                 for (int x = 0; x < width; x++)
                 {
                     int index = y * width + x;
-                    int r = Math.Min(255, Math.Max(0, (int)pixels[index, 0]));
-                    int g = Math.Min(255, Math.Max(0, (int)pixels[index, 1]));
-                    int b = Math.Min(255, Math.Max(0, (int)pixels[index, 2]));
-                    result.SetPixel(x, y, Color.FromArgb(r, g, b));
+                    int value = Math.Min(255, Math.Max(0, (int)pixels[index, 0]));
+
+                    Color newPixel;
+                    switch (channel)
+                    {
+                        case ColorChannel.R:
+                            newPixel = Color.FromArgb(value, 0, 0);
+                            break;
+                        case ColorChannel.G:
+                            newPixel = Color.FromArgb(0, value, 0);
+                            break;
+                        case ColorChannel.B:
+                            newPixel = Color.FromArgb(0, 0, value);
+                            break;
+                        default:
+                            newPixel = Color.Black;
+                            break;
+                    }
+
+                    result.SetPixel(x, y, newPixel);
                 }
             }
             return result;

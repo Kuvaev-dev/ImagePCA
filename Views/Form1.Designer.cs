@@ -37,6 +37,7 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.pictureBoxProcessed = new System.Windows.Forms.PictureBox();
+            this.comboBoxChannels = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -56,7 +57,7 @@
             // 
             // btnProcessImage
             // 
-            this.btnProcessImage.Location = new System.Drawing.Point(269, 19);
+            this.btnProcessImage.Location = new System.Drawing.Point(309, 19);
             this.btnProcessImage.Name = "btnProcessImage";
             this.btnProcessImage.Size = new System.Drawing.Size(175, 23);
             this.btnProcessImage.TabIndex = 1;
@@ -84,6 +85,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.comboBoxChannels);
             this.groupBox1.Controls.Add(this.btnLoadImage);
             this.groupBox1.Controls.Add(this.btnProcessImage);
             this.groupBox1.Controls.Add(this.btnSaveImage);
@@ -122,6 +124,14 @@
             this.pictureBoxProcessed.TabIndex = 3;
             this.pictureBoxProcessed.TabStop = false;
             // 
+            // comboBoxChannels
+            // 
+            this.comboBoxChannels.FormattingEnabled = true;
+            this.comboBoxChannels.Location = new System.Drawing.Point(235, 19);
+            this.comboBoxChannels.Name = "comboBoxChannels";
+            this.comboBoxChannels.Size = new System.Drawing.Size(68, 21);
+            this.comboBoxChannels.TabIndex = 3;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -158,6 +168,7 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.PictureBox pictureBoxProcessed;
+        private System.Windows.Forms.ComboBox comboBoxChannels;
     }
 }
 
