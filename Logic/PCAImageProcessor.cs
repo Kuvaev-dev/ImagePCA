@@ -1,6 +1,9 @@
 ﻿using ImagePCA.Interfaces;
+using ImagePCA.Views;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace ImagePCA.Logic
 {
@@ -10,26 +13,80 @@ namespace ImagePCA.Logic
     public class PCAImageProcessor : IImageProcessor
     {
         /// <summary>
-        /// Обробляє задане зображення, застосовуючи метод головних компонент (PCA).
+        /// Основний метод обробки зображення за допомогою PCA для вибраного каналу кольору.
+        /// Виводить проміжні етапи обробки у консоль.
         /// </summary>
-        /// <param name="originalImage">Оригінальне зображення у форматі <see cref="Bitmap"/>.</param>
-        /// <returns>Оброблене зображення у форматі <see cref="Bitmap"/>.</returns>
+        /// <param name="originalImage">Оригінальне зображення для обробки.</param>
+        /// <param name="channel">Канал кольору для обробки (R, G або B).</param>
+        /// <returns>Оброблене зображення після застосування PCA.</returns>
         public Bitmap ProcessImage(Bitmap originalImage, ColorChannel channel)
         {
-            var pixels = ImageToPixels(originalImage, channel);  // Измененный метод
+            Console.Clear();
+
+            TextViewer.ChangeColor("Початок обробки зображення...\n", ConsoleColor.Red);
+
+            var pixels = ImageToPixels(originalImage, channel);
+            TextViewer.ChangeColor($"Перетворено на масив пікселів. Приклад перших 5 значень: \n{string.Join(", ", GetFirstElements(pixels, 5))}\n", ConsoleColor.Green);
+
             var meanVector = CalculateMean(pixels);
+            TextViewer.ChangeColor($"Середнє значення: \n{string.Join(", ", meanVector.Select(m => m.ToString("F2")))}\n", ConsoleColor.Green);
+
             var centeredPixels = CenterData(pixels, meanVector);
+            TextViewer.ChangeColor($"Центровані дані. Приклад перших 5 значень: \n{string.Join(", ", GetFirstElements(centeredPixels, 5))}\n", ConsoleColor.Green);
+
             var covarianceMatrix = CalculateCovarianceMatrix(centeredPixels);
+            TextViewer.ChangeColor($"Матриця коваріації (перших кілька елементів): \n{GetMatrixSummary(covarianceMatrix)}\n", ConsoleColor.Green);
+
             var eigenVectors = FindEigenVectors(covarianceMatrix);
+            TextViewer.ChangeColor($"Власні вектори (перших кілька елементів): \n{GetMatrixSummary(eigenVectors)}\n", ConsoleColor.Green);
+
             var transformedPixels = ApplyTransformation(centeredPixels, eigenVectors);
-            return PixelsToImage(transformedPixels, originalImage.Width, originalImage.Height, channel);  // Измененный метод
+            TextViewer.ChangeColor($"Перетворені пікселі. Приклад перших 5 значень: \n{string.Join(", ", GetFirstElements(transformedPixels, 5))}\n", ConsoleColor.Green);
+
+            TextViewer.ChangeColor("Обробку завершено.\n", ConsoleColor.Cyan);
+
+            return PixelsToImage(transformedPixels, originalImage.Width, originalImage.Height, channel);
         }
 
         /// <summary>
-        /// Перетворює зображення у двовимірний масив пікселів.
+        /// Повертає перші N елементів із матриці пікселів у форматі рядка.
+        /// </summary>
+        /// <param name="matrix">Двовимірна матриця пікселів.</param>
+        /// <param name="count">Кількість елементів для відображення.</param>
+        /// <returns>Рядок із перших N елементів.</returns>
+        private string GetFirstElements(double[,] matrix, int count)
+        {
+            return string.Join(", ", Enumerable.Range(0, Math.Min(matrix.GetLength(0), count))
+                                               .Select(i => matrix[i, 0].ToString("F2")));
+        }
+
+        /// <summary>
+        /// Формує підсумок матриці, обмежений розміром 3x3, для виведення в консоль.
+        /// </summary>
+        /// <param name="matrix">Двовимірна матриця.</param>
+        /// <returns>Рядок із підсумком матриці.</returns>
+        private string GetMatrixSummary(double[,] matrix)
+        {
+            // Обмежуємо розмір матриці до 3x3
+            int rows = Math.Min(matrix.GetLength(0), 3);
+            int cols = Math.Min(matrix.GetLength(1), 3);
+            var summary = new List<string>();
+
+            for (int i = 0; i < rows; i++)
+            {
+                var row = string.Join(", ", Enumerable.Range(0, cols)
+                                                      .Select(j => matrix[i, j].ToString("F2")));
+                summary.Add($"[{row}]");
+            }
+            return string.Join("; ", summary);
+        }
+
+        /// <summary>
+        /// Перетворює зображення у двовимірний масив пікселів для вибраного каналу кольору.
         /// </summary>
         /// <param name="image">Зображення, яке потрібно перетворити.</param>
-        /// <returns>Двовимірний масив пікселів, де кожен піксель представлений RGB-значеннями.</returns>
+        /// <param name="channel">Канал кольору (R, G або B).</param>
+        /// <returns>Двовимірний масив пікселів.</returns>
         private double[,] ImageToPixels(Bitmap image, ColorChannel channel)
         {
             double[,] pixels = new double[image.Width * image.Height, 1];
@@ -143,12 +200,11 @@ namespace ImagePCA.Logic
         }
 
         /// <summary>
-        /// Застосовує перетворення до центрованих пікселів, використовуючи власні вектори.
+        /// Застосовує перетворення PCA до центрованих пікселів на основі власних векторів.
         /// </summary>
-        /// <param name="pixels">Центровані пікселі у вигляді двовимірного масиву.</param>
+        /// <param name="centeredPixels">Центровані пікселі у вигляді двовимірного масиву.</param>
         /// <param name="eigenVectors">Матриця власних векторів.</param>
-        /// <returns>Результат перетворення у вигляді двовимірного масиву.</returns>
-        /// <exception cref="InvalidOperationException">Викидається, якщо розміри матриць не відповідають.</exception>
+        /// <returns>Перетворені пікселі після застосування PCA.</returns>
         private double[,] ApplyTransformation(double[,] pixels, double[,] eigenVectors)
         {
             int pixelsRows = pixels.GetLength(0);
@@ -180,12 +236,13 @@ namespace ImagePCA.Logic
         }
 
         /// <summary>
-        /// Перетворює масив пікселів назад у зображення.
+        /// Перетворює оброблені пікселі назад у зображення.
         /// </summary>
-        /// <param name="pixels">Двовимірний масив пікселів.</param>
+        /// <param name="pixels">Перетворені пікселі у вигляді двовимірного масиву.</param>
         /// <param name="width">Ширина зображення.</param>
         /// <param name="height">Висота зображення.</param>
-        /// <returns>Зображення у форматі <see cref="Bitmap"/>.</returns>
+        /// <param name="channel">Канал кольору для обробки (R, G або B).</param>
+        /// <returns>Зображення після перетворення.</returns>
         private Bitmap PixelsToImage(double[,] pixels, int width, int height, ColorChannel channel)
         {
             Bitmap result = new Bitmap(width, height);

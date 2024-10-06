@@ -34,10 +34,10 @@
             this.btnSaveImage = new System.Windows.Forms.Button();
             this.pictureBoxOriginal = new System.Windows.Forms.PictureBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.comboBoxChannels = new System.Windows.Forms.ComboBox();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.pictureBoxProcessed = new System.Windows.Forms.PictureBox();
-            this.comboBoxChannels = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBoxOriginal)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -47,9 +47,9 @@
             // 
             // btnLoadImage
             // 
-            this.btnLoadImage.Location = new System.Drawing.Point(18, 19);
+            this.btnLoadImage.Location = new System.Drawing.Point(6, 19);
             this.btnLoadImage.Name = "btnLoadImage";
-            this.btnLoadImage.Size = new System.Drawing.Size(175, 23);
+            this.btnLoadImage.Size = new System.Drawing.Size(198, 23);
             this.btnLoadImage.TabIndex = 0;
             this.btnLoadImage.Text = "Завантажити зображення";
             this.btnLoadImage.UseVisualStyleBackColor = true;
@@ -57,9 +57,9 @@
             // 
             // btnProcessImage
             // 
-            this.btnProcessImage.Location = new System.Drawing.Point(309, 19);
+            this.btnProcessImage.Location = new System.Drawing.Point(289, 19);
             this.btnProcessImage.Name = "btnProcessImage";
-            this.btnProcessImage.Size = new System.Drawing.Size(175, 23);
+            this.btnProcessImage.Size = new System.Drawing.Size(198, 23);
             this.btnProcessImage.TabIndex = 1;
             this.btnProcessImage.Text = "Обробити зображення";
             this.btnProcessImage.UseVisualStyleBackColor = true;
@@ -67,9 +67,9 @@
             // 
             // btnSaveImage
             // 
-            this.btnSaveImage.Location = new System.Drawing.Point(522, 19);
+            this.btnSaveImage.Location = new System.Drawing.Point(508, 19);
             this.btnSaveImage.Name = "btnSaveImage";
-            this.btnSaveImage.Size = new System.Drawing.Size(175, 23);
+            this.btnSaveImage.Size = new System.Drawing.Size(198, 23);
             this.btnSaveImage.TabIndex = 2;
             this.btnSaveImage.Text = "Зберегти зображення";
             this.btnSaveImage.UseVisualStyleBackColor = true;
@@ -86,8 +86,8 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.comboBoxChannels);
-            this.groupBox1.Controls.Add(this.btnLoadImage);
             this.groupBox1.Controls.Add(this.btnProcessImage);
+            this.groupBox1.Controls.Add(this.btnLoadImage);
             this.groupBox1.Controls.Add(this.btnSaveImage);
             this.groupBox1.Location = new System.Drawing.Point(16, 12);
             this.groupBox1.Name = "groupBox1";
@@ -95,6 +95,14 @@
             this.groupBox1.TabIndex = 7;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Дії";
+            // 
+            // comboBoxChannels
+            // 
+            this.comboBoxChannels.FormattingEnabled = true;
+            this.comboBoxChannels.Location = new System.Drawing.Point(225, 21);
+            this.comboBoxChannels.Name = "comboBoxChannels";
+            this.comboBoxChannels.Size = new System.Drawing.Size(58, 21);
+            this.comboBoxChannels.TabIndex = 3;
             // 
             // groupBox2
             // 
@@ -123,14 +131,6 @@
             this.pictureBoxProcessed.Size = new System.Drawing.Size(341, 346);
             this.pictureBoxProcessed.TabIndex = 3;
             this.pictureBoxProcessed.TabStop = false;
-            // 
-            // comboBoxChannels
-            // 
-            this.comboBoxChannels.FormattingEnabled = true;
-            this.comboBoxChannels.Location = new System.Drawing.Point(235, 19);
-            this.comboBoxChannels.Name = "comboBoxChannels";
-            this.comboBoxChannels.Size = new System.Drawing.Size(68, 21);
-            this.comboBoxChannels.TabIndex = 3;
             // 
             // Form1
             // 
