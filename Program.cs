@@ -1,7 +1,4 @@
-﻿using ImagePCA.Interfaces;
-using ImagePCA.Logic;
-using ImagePCA.Views;
-using System;
+﻿using System;
 using System.Windows.Forms;
 
 namespace ImagePCA
@@ -16,8 +13,7 @@ namespace ImagePCA
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            IImageProcessor imageProcessor = new PCAImageProcessor();
-            Application.Run(new Form1(imageProcessor));
+            Application.Run(new Views.Form1());
         }
     }
 }

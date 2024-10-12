@@ -10,7 +10,7 @@ namespace ImagePCA.Views
             Console.OutputEncoding = System.Text.Encoding.Unicode;
             Console.ForegroundColor = color;
             Console.WriteLine(text);
-            Console.ResetColor();
+            Console.ForegroundColor = ConsoleColor.Green;
         }
     }
 }

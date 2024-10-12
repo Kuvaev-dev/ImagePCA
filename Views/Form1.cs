@@ -1,109 +1,156 @@
 ﻿using ImagePCA.Interfaces;
+using ImagePCA.Logic;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
 
 namespace ImagePCA.Views
 {
+    /// <summary>
+    /// Головна форма програми.
+    /// </summary>
     public partial class Form1 : Form
     {
         private Bitmap originalImage;
-        private Bitmap processedImage;
-        private readonly IImageProcessor _imageProcessor;
+        private Bitmap transformedImage;
+        private readonly IImageProcessor imageProcessor;
+        private readonly IPCAProcessor pcaProcessor;
 
         /// <summary>
-        /// Конструктор форми. Виконується ін'єкція стратегії обробки зображень через інтерфейс.
+        /// Конструктор форми.
         /// </summary>
-        /// <param name="imageProcessor">Інтерфейс для обробки зображень.</param>
-        public Form1(IImageProcessor imageProcessor)
+        public Form1()
         {
             InitializeComponent();
-            FormBorderStyle = FormBorderStyle.FixedSingle; // Забороняє змінювати розмір вікна
-            _imageProcessor = imageProcessor;
+            comboBoxChannels.Items.AddRange(new string[] { "Red", "Green", "Blue", "All" });
+            comboBoxChannels.SelectedIndex = 0;
+
+            imageProcessor = new ImageProcessor();
+            pcaProcessor = new PCAProcessor();
+
+            // Встановлення режиму адаптації зображень у PictureBox
+            pictureBoxOriginal.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBoxProcessed.SizeMode = PictureBoxSizeMode.Zoom;
         }
 
         /// <summary>
-        /// Обробляє подію натискання на кнопку "Завантажити зображення".
-        /// Відкриває діалог вибору файлу і завантажує вибране зображення.
+        /// Завантажує зображення за допомогою OpenFileDialog.
         /// </summary>
         private void btnLoadImage_Click(object sender, EventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog
-            {
-                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp" // Фільтр для зображень
-            };
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp";
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
                 originalImage = new Bitmap(openFileDialog.FileName);
-                pictureBoxOriginal.SizeMode = PictureBoxSizeMode.StretchImage; // Розтягує зображення для кращого перегляду
                 pictureBoxOriginal.Image = originalImage;
             }
         }
 
         /// <summary>
-        /// Обробляє подію натискання на кнопку "Обробити зображення".
-        /// Використовує обраний канал кольору для обробки зображення.
+        /// Застосовує метод PCA до завантаженого зображення.
         /// </summary>
-        private void btnProcessImage_Click(object sender, EventArgs e)
+        private void btnApplyPCA_Click(object sender, EventArgs e)
         {
             if (originalImage == null)
             {
-                MessageBox.Show("Сначала загрузите изображение."); // Повідомлення, якщо зображення не завантажено
+                MessageBox.Show("Завантажте зображення, будь-ласка.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            ColorChannel selectedChannel = GetSelectedChannel(); // Отримує вибраний канал
-            processedImage = _imageProcessor.ProcessImage(originalImage, selectedChannel); // Виклик методу обробки зображення
-            pictureBoxProcessed.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBoxProcessed.Image = processedImage;
+            double[,] channelData = imageProcessor.GetChannelData(originalImage);
+            TextViewer.ChangeColor("Дані каналу:", ConsoleColor.Cyan);
+            PrintMatrix(channelData);
+
+            double[,] centeredData = pcaProcessor.CenterData(channelData);
+            TextViewer.ChangeColor("Центровані дані:", ConsoleColor.Cyan);
+            PrintMatrix(centeredData);
+
+            double[,] covarianceMatrix = pcaProcessor.ComputeCovarianceMatrix(centeredData);
+            TextViewer.ChangeColor("Матриця ковариації:", ConsoleColor.Cyan);
+            PrintMatrix(covarianceMatrix);
+
+            var (eigenValues, eigenVectors) = pcaProcessor.EigenDecomposition(covarianceMatrix);
+            TextViewer.ChangeColor("Знаення власних векторів:", ConsoleColor.Cyan);
+            PrintArray(eigenValues);
+            TextViewer.ChangeColor("Власні вектори:", ConsoleColor.Cyan);
+            PrintMatrix(eigenVectors);
+
+            double[,] transformedData = pcaProcessor.TransformData(centeredData, eigenVectors);
+            TextViewer.ChangeColor("Трансформовані дані:", ConsoleColor.Cyan);
+            PrintMatrix(transformedData);
+
+            if (comboBoxChannels.SelectedItem.ToString() == "All")
+            {
+                transformedImage = imageProcessor.CreateImageFromTransformedData(transformedData, originalImage);
+            }
+            else
+            {
+                transformedImage = imageProcessor.CreateImageFromMatrix(transformedData, originalImage, comboBoxChannels.SelectedIndex);
+            }
+            pictureBoxProcessed.Image = transformedImage;
         }
 
         /// <summary>
-        /// Обробляє подію натискання на кнопку "Зберегти зображення".
-        /// Відкриває діалог збереження файлу і дозволяє зберегти оброблене зображення.
+        /// Зберігає перетворене зображення.
         /// </summary>
         private void btnSaveImage_Click(object sender, EventArgs e)
         {
-            if (processedImage == null)
+            if (transformedImage == null)
             {
-                MessageBox.Show("Изображение еще не обработано."); // Повідомлення, якщо зображення не оброблено
+                MessageBox.Show("Немає трансформованого зображення для збереження.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            SaveFileDialog saveFileDialog = new SaveFileDialog
-            {
-                Filter = "JPEG Image|*.jpg|PNG Image|*.png|Bitmap Image|*.bmp" // Фільтр для вибору типу збереженого файлу
-            };
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "PNG Image|*.png|JPEG Image|*.jpg|Bitmap Image|*.bmp";
+            saveFileDialog.Title = "Зберегти трансформоване зображення";
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
-                processedImage.Save(saveFileDialog.FileName); // Збереження обробленого зображення
+                transformedImage.Save(saveFileDialog.FileName);
+                MessageBox.Show("Зображення успішно збережено.", "Інформація", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
         /// <summary>
-        /// Отримує вибраний користувачем канал кольору з ComboBox.
+        /// Виводить матрицю у консоль.
         /// </summary>
-        /// <returns>Вибраний канал кольору (R, G або B).</returns>
-        private ColorChannel GetSelectedChannel()
+        private void PrintMatrix(double[,] matrix)
         {
-            switch (comboBoxChannels.SelectedItem.ToString())
+            int rows = matrix.GetLength(0);
+            int cols = matrix.GetLength(1);
+            int count = 0;
+            for (int i = 0; i < rows && count < 9; i++)
             {
-                case "R": return ColorChannel.R;
-                case "G": return ColorChannel.G;
-                case "B": return ColorChannel.B;
-                default: return ColorChannel.R;
+                for (int j = 0; j < cols && count < 9; j++)
+                {
+                    Console.Write($"{matrix[i, j]} ");
+                    count++;
+                }
+                Console.WriteLine();
             }
+            Console.WriteLine("...");
         }
 
         /// <summary>
-        /// Ініціалізація форми під час завантаження. Заповнює ComboBox доступними каналами кольору.
+        /// Виводить масив у консоль.
+        /// </summary>
+        private void PrintArray(double[] array)
+        {
+            for (int i = 0; i < array.Length && i < 5; i++)
+            {
+                Console.Write($"{array[i]} ");
+            }
+            Console.WriteLine("...");
+        }
+
+        /// <summary>
+        /// Обробник події завантаження форми.
         /// </summary>
         private void Form1_Load(object sender, EventArgs e)
         {
-            comboBoxChannels.Items.AddRange(new string[] { "R", "G", "B" });
-            comboBoxChannels.SelectedIndex = 0; // Встановлює R як канал за замовчуванням
         }
     }
 }

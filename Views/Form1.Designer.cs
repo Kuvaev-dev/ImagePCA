@@ -63,7 +63,7 @@
             this.btnProcessImage.TabIndex = 1;
             this.btnProcessImage.Text = "Обробити зображення";
             this.btnProcessImage.UseVisualStyleBackColor = true;
-            this.btnProcessImage.Click += new System.EventHandler(this.btnProcessImage_Click);
+            this.btnProcessImage.Click += new System.EventHandler(this.btnApplyPCA_Click);
             // 
             // btnSaveImage
             // 
